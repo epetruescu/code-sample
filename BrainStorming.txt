@@ -1,4 +1,10 @@
-deployed in a kubernetes enviroment.
+An intersection usually has local hardware that then communicates with a server about its status
+A intersection can have sensors in the road for car presence, sensors for emergency lights, dedicated right turn lanes, dedicated left turn lanes, and other oddities to fit the situation.
+
+For this coding sample ill dedicate a thread to each intersection since as its a good way to showcase multi threading.
+I can use a thread to manage all the lights. It would be more efficient but it would be rather similar to gaming logic of "ticks" and id like to advoid that
+
+deployed in a kubernetes environment.
 PostgreSQL
 Intersection with 2 pairs of stop lights.
 each pair would be synced
