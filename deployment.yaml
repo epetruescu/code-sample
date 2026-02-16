@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: light-controller-ui
+spec:
+  selector:
+    matchLabels:
+      app: light-controller-ui
+  template:
+    metadata:
+      labels:
+        app: light-controller-ui
+    spec:
+      containers:
+        - name: light-controller-ui
+          image: light-controller-ui-image
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: light-controller-ui
+spec:
+  selector:
+    app: light-controller-ui
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

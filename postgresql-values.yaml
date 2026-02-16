@@ -1,0 +1,25 @@
+primary:
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+    tag: latest
+  
+  persistence:
+    enabled: true
+
+auth:
+  username: "postgres"
+  postgresqlPassword: "postgrespassword"
+  database: "lightcontrollerdb"
+
+volumePermissions:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/os-shell
+    tag: latest
+
+service:
+  type: ClusterIP
+  ports:
+    postgresql: 5432

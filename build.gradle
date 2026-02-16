@@ -24,6 +24,7 @@ dependencies {
 	testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
 	implementation 'org.projectlombok:lombok:_'
 	annotationProcessor 'org.projectlombok:lombok:_'
+	runtimeOnly 'org.postgresql:postgresql'
 }
 
 tasks.named('test') {
