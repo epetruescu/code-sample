@@ -34,3 +34,8 @@ Websocket would just tell the UI when a status has changed
 Redis would be good for locks but a manual lock would work. Can also just have a local cache since this is a small project but i would like to run 2 pods like usual.
 
 Redis has pub/sub which would help for websockets over multiple pods.
+
+An intersection is probably an analog system, u have groups of lights and u have groups of light phases. u can mix match them
+Its all setup by a trained professional who also tests the entire cycle. I watched them before.
+I dont need to verify anything and trust that the one who set it up is correct.
+This is just a system to store the signal groups and go through the light phases

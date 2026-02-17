@@ -5,6 +5,7 @@ import dev.rygen.intersectionlightcontroller.dtos.IntersectionRequest;
 import dev.rygen.intersectionlightcontroller.entities.Intersection;
 import dev.rygen.intersectionlightcontroller.services.IntersectionService;
 import jakarta.annotation.Resource;
+import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,25 +21,20 @@ public class IntersectionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<IntersectionDTO> getIntersection(@PathVariable int id) {
-        Intersection intersection = intersectionService.findById(id);
-        return ResponseEntity.ok(IntersectionDTO.fromEntity(intersection));
+        return ResponseEntity.ok(intersectionService.findById(id));
     }
 
     @PostMapping
     public ResponseEntity<IntersectionDTO> createIntersection(@RequestBody IntersectionRequest request) {
-        Intersection intersection = intersectionService.createIntersection(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(IntersectionDTO.fromEntity(intersection));
+                .body(intersectionService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<IntersectionDTO> updateIntersection(
-            @PathVariable Integer id,
+            @NonNull @PathVariable Integer id,
             @RequestBody IntersectionRequest request) {
-        intersectionService.update(id, request);
-        Intersection intersection = Intersection.builder()
-                .intersectionId(id).name(request.name()).active(request.active()).build();
-        return ResponseEntity.ok(IntersectionDTO.fromEntity(intersection));
+        return ResponseEntity.ok(intersectionService.update(id, request));
     }
 
 

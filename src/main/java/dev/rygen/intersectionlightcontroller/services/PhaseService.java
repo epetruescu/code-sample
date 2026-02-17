@@ -36,7 +36,9 @@ public class PhaseService {
     }
 
     public Phase findById(Integer id) {
-        return phaseRepository.findById(id).orElseThrow();
+        return phaseRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Phase not found with id: " + id)
+        );
     }
 
     @Transactional
@@ -101,7 +103,7 @@ public class PhaseService {
                 SignalGroup signalGroup = signalGroupRepository.findById(signalGroupId)
                         .orElseThrow(() -> new EntityNotFoundException("Signal group not found: " + signalGroupId));
                 
-                if (!Integer.valueOf(signalGroup.getIntersectionId()).equals(phase.getIntersectionId())) {
+                if (signalGroup.getIntersectionId() == phase.getIntersectionId()) {
                     throw new IllegalArgumentException(
                             "Signal group " + signalGroupId + " does not belong to intersection " + phase.getIntersectionId()
                     );
@@ -119,6 +121,7 @@ public class PhaseService {
     }
 
     public void delete(Integer id) {
+        //Can be deleted and phase state change would happen else where
         phaseRepository.deleteById(id);
     }
 

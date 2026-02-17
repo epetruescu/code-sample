@@ -1,6 +1,8 @@
 package dev.rygen.intersectionlightcontroller.dtos;
 
 import dev.rygen.intersectionlightcontroller.entities.Intersection;
+import dev.rygen.intersectionlightcontroller.entities.Phase;
+import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -31,16 +33,25 @@ public record IntersectionDTO(
 
     public static IntersectionDTO fromEntityWithCollections(
             Intersection intersection,
-            List<PhaseDTO> phases,
-            List<SignalGroupDTO> signalGroups) {
+            List<Phase> phases,
+            List<SignalGroup> signalGroups) {
+        
+        List<PhaseDTO> phaseDTOs = phases != null 
+                ? phases.stream().map(PhaseDTO::fromEntity).toList() 
+                : List.of();
+        
+        List<SignalGroupDTO> signalGroupDTOs = signalGroups != null 
+                ? signalGroups.stream().map(SignalGroupDTO::fromEntity).toList() 
+                : List.of();
+        
         return new IntersectionDTO(
                 intersection.getIntersectionId(),
                 intersection.getName(),
                 intersection.isActive(),
                 intersection.getLastTransitionTime(),
                 intersection.getCurrentPhaseIndex(),
-                phases != null ? phases : List.of(),
-                signalGroups != null ? signalGroups : List.of()
+                phaseDTOs,
+                signalGroupDTOs
         );
     }
 }

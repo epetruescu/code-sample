@@ -31,7 +31,9 @@ public class SignalGroupService {
     }
 
     public SignalGroup findById(Integer id) {
-        return signalGroupRepository.findById(id).orElseThrow();
+        return signalGroupRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Signal Group not found with id: " + id)
+        );
     }
 
     @Transactional
@@ -61,12 +63,8 @@ public class SignalGroupService {
 
     @Transactional
     public void delete(Integer id) {
-        List<SignalGroupPhase> usages = signalGroupPhaseRepository.findBySignalGroupId(id);
-        if (!usages.isEmpty()) {
-            throw new IllegalStateException("Cannot delete signal group " +
-                    id + " because it is used in " + usages.size() + " phases. ");
-        }
-        
+        //it can be deleted. State management will happen else where
+        signalGroupPhaseRepository.findBySignalGroupId(id);
         signalGroupRepository.deleteById(id);
     }
 
