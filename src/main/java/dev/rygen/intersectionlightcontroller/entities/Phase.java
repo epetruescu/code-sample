@@ -41,6 +41,9 @@ public class Phase {
     @OneToMany(mappedBy = "phase")
     private List<SignalGroupPhase> signalGroupPhases;
 
+    @Version
+    private Integer version;
+
     public void validate() {
         if (yellowDuration < 1) {
             throw new IllegalArgumentException("Yellow duration must be >= 1 second");

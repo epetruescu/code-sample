@@ -40,4 +40,10 @@ public class IntersectionController {
                 .intersectionId(id).name(request.name()).active(request.active()).build();
         return ResponseEntity.ok(IntersectionDTO.fromEntity(intersection));
     }
+
+
+    @DeleteMapping("/{id}")
+    public void deleteIntersection(@PathVariable int id) {
+        intersectionService.deleteIntersection(id);
+    }
 }

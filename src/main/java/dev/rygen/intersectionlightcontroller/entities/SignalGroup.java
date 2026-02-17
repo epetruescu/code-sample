@@ -42,4 +42,7 @@ public class SignalGroup {
     @Builder.Default
     @OneToMany(mappedBy = "signalGroup", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SignalGroupPhase> signalGroupPhases = new ArrayList<>();
+
+    @Version
+    private Integer version;
 }

@@ -33,4 +33,7 @@ public class SignalGroupPhase {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "signal_group_id")
     private SignalGroup signalGroup;
+
+    @Version
+    private Integer version;
 }
