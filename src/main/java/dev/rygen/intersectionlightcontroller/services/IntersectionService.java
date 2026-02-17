@@ -23,7 +23,7 @@ public class IntersectionService {
     private PhaseService phaseService;
 
     public Intersection findById(int id) {
-        return intersectionRepository.findById(id).get();
+        return intersectionRepository.findById(id).orElseThrow();
     }
 
     public Intersection createIntersection(IntersectionRequest request) {
@@ -44,8 +44,8 @@ public class IntersectionService {
         if (intersection.isActive()) {
             throw new DataIntegrityViolationException("Intersection is still active. Unable to delete");
         }
-        signalGroupService.deleteAllByIntersectionId(id);
         phaseService.deleteAllByIntersectionId(id);
+        signalGroupService.deleteAllByIntersectionId(id);
         intersectionRepository.deleteById(id);
     }
 }

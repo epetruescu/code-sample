@@ -24,16 +24,23 @@ public record IntersectionDTO(
                 intersection.isActive(),
                 intersection.getLastTransitionTime(),
                 intersection.getCurrentPhaseIndex(),
-                intersection.getPhases() != null
-                        ? intersection.getPhases().stream()
-                        .map(PhaseDTO::fromEntity)
-                        .toList()
-                        : List.of(),
-                intersection.getSignalGroups() != null
-                        ? intersection.getSignalGroups().stream()
-                        .map(SignalGroupDTO::fromEntity)
-                        .toList()
-                        : List.of()
+                List.of(),
+                List.of()
+        );
+    }
+
+    public static IntersectionDTO fromEntityWithCollections(
+            Intersection intersection,
+            List<PhaseDTO> phases,
+            List<SignalGroupDTO> signalGroups) {
+        return new IntersectionDTO(
+                intersection.getIntersectionId(),
+                intersection.getName(),
+                intersection.isActive(),
+                intersection.getLastTransitionTime(),
+                intersection.getCurrentPhaseIndex(),
+                phases != null ? phases : List.of(),
+                signalGroups != null ? signalGroups : List.of()
         );
     }
 }

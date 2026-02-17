@@ -2,11 +2,14 @@ package dev.rygen.intersectionlightcontroller.services;
 
 import dev.rygen.intersectionlightcontroller.dtos.SignalGroupDTO;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
+import dev.rygen.intersectionlightcontroller.entities.SignalGroupPhase;
 import dev.rygen.intersectionlightcontroller.repositories.IntersectionRepository;
+import dev.rygen.intersectionlightcontroller.repositories.SignalGroupPhaseRepository;
 import dev.rygen.intersectionlightcontroller.repositories.SignalGroupRepository;
 import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +23,9 @@ public class SignalGroupService {
     @Resource
     private IntersectionRepository intersectionRepository;
 
+    @Resource
+    private SignalGroupPhaseRepository signalGroupPhaseRepository;
+
     public List<SignalGroup> findByIntersectionId(Integer intersectionId) {
         return signalGroupRepository.findByIntersectionIdEquals(intersectionId);
     }
@@ -28,19 +34,23 @@ public class SignalGroupService {
         return signalGroupRepository.findById(id).orElseThrow();
     }
 
+    @Transactional
     public SignalGroup create(SignalGroupDTO request) {
         if (!intersectionRepository.existsById(request.intersectionId())) {
             throw new EntityNotFoundException("Intersection not found with Id: " + request.intersectionId());
         }
         SignalGroup signalGroup = SignalGroup.builder()
-                .name(request.name()).intersectionId(request.id()).build();
+                .name(request.name())
+                .intersectionId(request.intersectionId())
+                .build();
         return signalGroupRepository.save(signalGroup);
     }
 
+    @Transactional
     public SignalGroup update(Integer id, SignalGroupDTO request) {
         SignalGroup signalGroup = findById(id);
         if (request.intersectionId() != null && !request.intersectionId().equals(signalGroup.getIntersectionId())) {
-            throw new IllegalArgumentException("Cannot change intersection for existing phase");
+            throw new IllegalArgumentException("Cannot change intersection for existing signal group");
         }
         if (StringUtils.isNotBlank(request.name())) {
             signalGroup.setName(request.name());
@@ -49,10 +59,18 @@ public class SignalGroupService {
         return signalGroupRepository.save(signalGroup);
     }
 
+    @Transactional
     public void delete(Integer id) {
+        List<SignalGroupPhase> usages = signalGroupPhaseRepository.findBySignalGroupId(id);
+        if (!usages.isEmpty()) {
+            throw new IllegalStateException("Cannot delete signal group " +
+                    id + " because it is used in " + usages.size() + " phases. ");
+        }
+        
         signalGroupRepository.deleteById(id);
     }
 
+    @Transactional
     public void deleteAllByIntersectionId(Integer intersectionId) {
         signalGroupRepository.deleteByIntersectionIdEquals(intersectionId);
     }

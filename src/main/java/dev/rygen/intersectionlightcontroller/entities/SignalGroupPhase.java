@@ -20,19 +20,11 @@ public class SignalGroupPhase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "phase_id", nullable = false, insertable = false, updatable = false)
+    @Column(name = "phase_id", nullable = false)
     private int phaseId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "phase_id")
-    private Phase phase;
-
-    @Column(name = "signal_group_id", nullable = false, insertable = false, updatable = false)
+    @Column(name = "signal_group_id", nullable = false)
     private int signalGroupId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "signal_group_id")
-    private SignalGroup signalGroup;
 
     @Version
     private Integer version;

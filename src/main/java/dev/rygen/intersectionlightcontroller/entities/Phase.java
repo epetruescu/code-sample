@@ -6,28 +6,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Table(name = "phases")
-//A signal phase has its own configuration as its independent of others since it's based on the traffic itself
-//This is a signal phase.
 public class Phase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "phase_id")
     private int phaseId;
 
-    @Column(name = "intersection_id", nullable = false, insertable = false, updatable = false)
+    @Column(name = "intersection_id", nullable = false)
     private int intersectionId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "intersection_id")
-    private Intersection intersection;
 
     @Column(nullable = false)
     private Integer sequence;
@@ -37,9 +29,6 @@ public class Phase {
 
     @Column(nullable = false)
     private int yellowDuration;
-
-    @OneToMany(mappedBy = "phase")
-    private List<SignalGroupPhase> signalGroupPhases;
 
     @Version
     private Integer version;

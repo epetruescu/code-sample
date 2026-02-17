@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,15 +28,6 @@ public class Intersection {
     @Builder.Default
     @Column(nullable = false)
     private boolean active = false;
-
-    @Builder.Default
-    @OneToMany(mappedBy = "intersection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy("sequence ASC")
-    private List<Phase> phases = new ArrayList<>();
-
-    @Builder.Default
-    @OneToMany(mappedBy = "intersection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SignalGroup> signalGroups = new ArrayList<>();
 
     @Builder.Default
     @Column(nullable = false)
