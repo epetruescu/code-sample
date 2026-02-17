@@ -20,7 +20,6 @@ public class IntersectionController {
     @PostMapping
     public void createIntersection(@RequestBody IntersectionDTO intersectionDto) {
         Intersection intersection = Intersection.builder()
-                .activeLight(intersectionDto.activeLight())
                 .build();
         this.intersectionService.createIntersection(intersection);
     }

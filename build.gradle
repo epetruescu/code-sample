@@ -25,6 +25,8 @@ dependencies {
 	implementation 'org.projectlombok:lombok:_'
 	annotationProcessor 'org.projectlombok:lombok:_'
 	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.redisson:redisson-spring-boot-starter:3.26.0'
 }
 
 tasks.named('test') {

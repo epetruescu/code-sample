@@ -5,6 +5,11 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: "redis-master"
+      port: 6379
+      password: "redispassword"
 
 datasource:
   url: jdbc:postgresql://postgres:5432/lightcontrollerdb

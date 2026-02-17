@@ -1,15 +1,13 @@
 package dev.rygen.intersectionlightcontroller.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import java.util.Objects;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "intersection")
+@Table(name = "intersections")
 public class Intersection {
 
     @Id
@@ -26,6 +24,30 @@ public class Intersection {
     @Column(name = "intersection_id")
     private int intersectionId;
 
-    @Column(name = "active_light")
-    private String activeLight;
+    @Column(nullable = false)
+    private String name;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean active = false;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "intersection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("sequence ASC")
+    private List<Phase> phases = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "intersection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<SignalGroup> signalGroups = new ArrayList<>();
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int currentPhaseIndex = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Instant lastTransitionTime = Instant.now();
+
+    @Version
+    private Integer version;
 }

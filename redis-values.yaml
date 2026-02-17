@@ -1,0 +1,23 @@
+# redis-values.yaml
+architecture: standalone
+
+auth:
+  enabled: true
+  password: "redispassword"
+
+master:
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/redis
+    tag: latest
+  persistence:
+    enabled: true
+    size: 2Gi
+
+# Fix for the init-container that handles disk permissions
+volumePermissions:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/os-shell
+    tag: latest
