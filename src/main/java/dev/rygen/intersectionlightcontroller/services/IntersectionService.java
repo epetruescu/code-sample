@@ -90,4 +90,9 @@ public class IntersectionService {
         signalGroupService.deleteAllByIntersectionId(id);
         intersectionRepository.deleteById(id);
     }
+
+    public Intersection getIntersection(Integer intersectionId) {
+        return intersectionRepository.findById(intersectionId)
+                .orElseThrow(() -> new EntityNotFoundException("Intersection not found with id: " + intersectionId));
+    }
 }
