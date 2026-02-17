@@ -38,4 +38,28 @@ public class LeadershipElectionService {
             }
         }
     }
+
+    public boolean isLeader(Integer intersectionId) {
+        RLock lock = redissonClient.getLock(INTERSECTION_LEADER_KEY + intersectionId);
+        return lock.isHeldByCurrentThread();
+    }
+
+    public boolean renewLeadership(Integer intersectionId, long leadershipLeaseDuration) {
+        RLock lock = redissonClient.getLock(INTERSECTION_LEADER_KEY + intersectionId);
+        if (!lock.isHeldByCurrentThread()) {
+            return false;
+        }
+
+        try {
+            boolean renewed = lock.tryLock(0, leadershipLeaseDuration, TimeUnit.MILLISECONDS);
+            if (!renewed) {
+                log.warn("Failed to renew leadership for intersection {}", intersectionId);
+            }
+            return renewed;
+        } catch (Exception e) {
+            Thread.currentThread().interrupt();
+            log.error("Error while renewing leadership for intersection {}", intersectionId, e);
+            return false;
+        }
+    }
 }

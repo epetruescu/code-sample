@@ -60,18 +60,39 @@ public class WorkerService {
                     TimeUnit.SECONDS
             );
             runningIntersections.put(intersectionId, future);
-
-
+            return true;
         } catch (Exception e) {
             log.error("Failed to start intersection {}", intersectionId, e);
             leadershipElectionService.releaseLeadership(intersectionId);
             return false;
         }
-        return true;
     }
 
     @Async
+    //Return a boolean just to make testing easier
     private CompletableFuture<Boolean> intersectionCycle(Integer intersectionId) {
-        return CompletableFuture.completedFuture(Boolean.TRUE);
+        try {
+            if (!leadershipElectionService.isLeader(intersectionId)) {
+                stopIntersection(intersectionId);
+                return CompletableFuture.completedFuture(Boolean.FALSE);
+            }
+            boolean renewed = leadershipElectionService.renewLeadership(intersectionId, leadershipLeaseDuration);
+            if (!renewed) {
+                stopIntersection(intersectionId);
+                return CompletableFuture.completedFuture(Boolean.FALSE);
+            }
+            return CompletableFuture.completedFuture(Boolean.TRUE);
+        } catch (Exception e) {
+            log.error("Error with intersection cycle for {}", intersectionId);
+            return CompletableFuture.completedFuture(Boolean.FALSE);
+        }
+    }
+
+    private void stopIntersection(Integer intersectionId) {
+        ScheduledFuture<?> future = runningIntersections.remove(intersectionId);
+        if (future != null) {
+            future.cancel(false);
+        }
+        leadershipElectionService.releaseLeadership(intersectionId);
     }
 }
