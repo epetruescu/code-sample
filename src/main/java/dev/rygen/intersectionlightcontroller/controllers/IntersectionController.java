@@ -1,8 +1,12 @@
 package dev.rygen.intersectionlightcontroller.controllers;
 
 import dev.rygen.intersectionlightcontroller.dtos.IntersectionDTO;
+import dev.rygen.intersectionlightcontroller.dtos.IntersectionRequest;
 import dev.rygen.intersectionlightcontroller.entities.Intersection;
 import dev.rygen.intersectionlightcontroller.services.IntersectionService;
+import jakarta.annotation.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -11,16 +15,29 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/intersections")
 public class IntersectionController {
 
-    private final IntersectionService intersectionService;
+    @Resource
+    private IntersectionService intersectionService;
 
-    public IntersectionController(IntersectionService intersectionService) {
-        this.intersectionService = intersectionService;
+    @GetMapping("/{id}")
+    public ResponseEntity<IntersectionDTO> getIntersection(@PathVariable int id) {
+        Intersection intersection = intersectionService.findById(id);
+        return ResponseEntity.ok(IntersectionDTO.fromEntity(intersection));
     }
 
     @PostMapping
-    public void createIntersection(@RequestBody IntersectionDTO intersectionDto) {
+    public ResponseEntity<IntersectionDTO> createIntersection(@RequestBody IntersectionRequest request) {
+        Intersection intersection = intersectionService.createIntersection(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(IntersectionDTO.fromEntity(intersection));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<IntersectionDTO> updateIntersection(
+            @PathVariable Integer id,
+            @RequestBody IntersectionRequest request) {
+        intersectionService.update(id, request);
         Intersection intersection = Intersection.builder()
-                .build();
-        this.intersectionService.createIntersection(intersection);
+                .intersectionId(id).name(request.name()).active(request.active()).build();
+        return ResponseEntity.ok(IntersectionDTO.fromEntity(intersection));
     }
 }
