@@ -3,6 +3,7 @@ package dev.rygen.intersectionlightcontroller.services;
 import dev.rygen.intersectionlightcontroller.dtos.SignalGroupDTO;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroupPhase;
+import dev.rygen.intersectionlightcontroller.enums.LightColor;
 import dev.rygen.intersectionlightcontroller.repositories.IntersectionRepository;
 import dev.rygen.intersectionlightcontroller.repositories.SignalGroupPhaseRepository;
 import dev.rygen.intersectionlightcontroller.repositories.SignalGroupRepository;
@@ -71,5 +72,13 @@ public class SignalGroupService {
     @Transactional
     public void deleteAllByIntersectionId(Integer intersectionId) {
         signalGroupRepository.deleteByIntersectionIdEquals(intersectionId);
+    }
+
+    public boolean existsById(Integer signalGroupId) {
+        return signalGroupRepository.existsById(signalGroupId);
+    }
+
+    public void updateLight(int signalGroupId, LightColor currentLight) {
+        signalGroupRepository.updateCurrentColorBySignalGroupIdEquals(currentLight, signalGroupId);
     }
 }

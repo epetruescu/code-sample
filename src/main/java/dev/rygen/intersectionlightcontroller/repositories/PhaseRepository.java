@@ -11,4 +11,8 @@ public interface PhaseRepository extends JpaRepository<Phase, Integer> {
     List<Phase> findByIntersectionIdEquals(int intersectionId);
 
     void deleteByIntersectionIdEquals(int intersectionId);
+
+    Phase findByIntersectionIdEqualsAndSequenceEquals(int intersectionId, Integer sequence);
+
+    long countByIntersectionIdEquals(int intersectionId);
 }

@@ -2,11 +2,10 @@ package dev.rygen.intersectionlightcontroller.services;
 
 import dev.rygen.intersectionlightcontroller.dtos.IntersectionDTO;
 import dev.rygen.intersectionlightcontroller.dtos.IntersectionRequest;
-import dev.rygen.intersectionlightcontroller.dtos.PhaseDTO;
-import dev.rygen.intersectionlightcontroller.dtos.SignalGroupDTO;
 import dev.rygen.intersectionlightcontroller.entities.Intersection;
 import dev.rygen.intersectionlightcontroller.entities.Phase;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
+import dev.rygen.intersectionlightcontroller.enums.LightColor;
 import dev.rygen.intersectionlightcontroller.repositories.IntersectionRepository;
 import dev.rygen.intersectionlightcontroller.repositories.PhaseRepository;
 import dev.rygen.intersectionlightcontroller.repositories.SignalGroupRepository;
@@ -16,6 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -94,5 +94,17 @@ public class IntersectionService {
     public Intersection getIntersection(Integer intersectionId) {
         return intersectionRepository.findById(intersectionId)
                 .orElseThrow(() -> new EntityNotFoundException("Intersection not found with id: " + intersectionId));
+    }
+
+    public List<Integer> findAllIdsActive() {
+        return intersectionRepository.findIntersectionIdByActive();
+    }
+
+    public void updateIntersectionState(Integer intersectionId, Integer currentSequence, LightColor currentLight,
+                                        int nextSequence, LightColor nextLight, Instant currentTime) {
+        intersectionRepository.updateCurrentPhaseIndexAndLastTransitionTimeByIntersectionIdEquals(
+                nextSequence, currentTime, intersectionId);
+        phaseService.updatePhaseGroup(intersectionId, currentSequence, currentLight);
+        phaseService.updatePhaseGroup(intersectionId, nextSequence, nextLight);
     }
 }

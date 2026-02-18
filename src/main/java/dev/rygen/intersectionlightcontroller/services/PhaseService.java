@@ -4,6 +4,7 @@ import dev.rygen.intersectionlightcontroller.dtos.PhaseDTO;
 import dev.rygen.intersectionlightcontroller.entities.Phase;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroupPhase;
+import dev.rygen.intersectionlightcontroller.enums.LightColor;
 import dev.rygen.intersectionlightcontroller.repositories.IntersectionRepository;
 import dev.rygen.intersectionlightcontroller.repositories.PhaseRepository;
 import dev.rygen.intersectionlightcontroller.repositories.SignalGroupPhaseRepository;
@@ -12,6 +13,7 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 
 public class PhaseService {
@@ -23,7 +25,7 @@ public class PhaseService {
     private IntersectionRepository intersectionRepository;
 
     @Resource
-    private SignalGroupRepository signalGroupRepository;
+    private SignalGroupService signalGroupService;
 
     @Resource
     private SignalGroupPhaseRepository signalGroupPhaseRepository;
@@ -60,7 +62,7 @@ public class PhaseService {
         phase = phaseRepository.save(phase);
 
         for (Integer signalGroupId : request.signalGroupIds()) {
-            if (!signalGroupRepository.existsById(signalGroupId)) {
+            if (!signalGroupService.existsById(signalGroupId)) {
                 throw new EntityNotFoundException("Signal group not found: " + signalGroupId);
             }
 
@@ -96,12 +98,11 @@ public class PhaseService {
             signalGroupPhaseRepository.deleteByPhaseId(phase.getPhaseId());
 
             for (Integer signalGroupId : request.signalGroupIds()) {
-                if (!signalGroupRepository.existsById(signalGroupId)) {
+                if (!signalGroupService.existsById(signalGroupId)) {
                     throw new EntityNotFoundException("Signal group not found: " + signalGroupId);
                 }
 
-                SignalGroup signalGroup = signalGroupRepository.findById(signalGroupId)
-                        .orElseThrow(() -> new EntityNotFoundException("Signal group not found: " + signalGroupId));
+                SignalGroup signalGroup = signalGroupService.findById(signalGroupId);
                 
                 if (signalGroup.getIntersectionId() == phase.getIntersectionId()) {
                     throw new IllegalArgumentException(
@@ -127,5 +128,21 @@ public class PhaseService {
 
     public void deleteAllByIntersectionId(Integer intersectionId) {
         phaseRepository.deleteByIntersectionIdEquals(intersectionId);
+    }
+
+    public Phase findByIntersectionIdAndPhaseSequence(Integer intersectionId, Integer phaseSequence) {
+        return phaseRepository.findByIntersectionIdEqualsAndSequenceEquals(intersectionId, phaseSequence);
+    }
+
+    public long countByIntersectionId(Integer intersectionId) {
+        return phaseRepository.countByIntersectionIdEquals(intersectionId);
+    }
+
+    public void updatePhaseGroup(Integer intersectionId, Integer sequence, LightColor currentLight) {
+        Phase phase = findByIntersectionIdAndPhaseSequence(intersectionId, sequence);
+        List<SignalGroupPhase> signalGroupPhases = signalGroupPhaseRepository.findByPhaseId(phase.getPhaseId());
+        signalGroupPhases.forEach((signalGroupPhase -> {
+            signalGroupService.updateLight(signalGroupPhase.getSignalGroupId(), currentLight);
+        }));
     }
 }
