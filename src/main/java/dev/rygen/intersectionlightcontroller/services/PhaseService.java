@@ -138,6 +138,7 @@ public class PhaseService {
         return phaseRepository.countByIntersectionIdEquals(intersectionId);
     }
 
+    @Transactional
     public void updatePhaseGroup(Integer intersectionId, Integer sequence, LightColor currentLight) {
         Phase phase = findByIntersectionIdAndPhaseSequence(intersectionId, sequence);
         List<SignalGroupPhase> signalGroupPhases = signalGroupPhaseRepository.findByPhaseId(phase.getPhaseId());

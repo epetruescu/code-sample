@@ -78,6 +78,7 @@ public class SignalGroupService {
         return signalGroupRepository.existsById(signalGroupId);
     }
 
+    @Transactional
     public void updateLight(int signalGroupId, LightColor currentLight) {
         signalGroupRepository.updateCurrentColorBySignalGroupIdEquals(currentLight, signalGroupId);
     }

@@ -122,7 +122,7 @@ public class WorkerService {
     private void checkPhases(Integer intersectionId) {
         RMap<String, Object> state = redissonClient.getMap(INTERSECTION_STATE_KEY + intersectionId);
         Integer phaseIndex = (Integer) state.getOrDefault(PHASE_INDEX, 0);
-        Instant lastTransitionTime = (Instant) state.get(LAST_TRANSITION_TIME);
+        Instant lastTransitionTime = (Instant) state.getOrDefault(LAST_TRANSITION_TIME, Instant.now());
         Long cycleCount = (Long) state.getOrDefault(CYCLE_COUNT, 0L);
 
         Phase currentPhase = phaseService.findByIntersectionIdAndPhaseSequence(intersectionId, phaseIndex);
