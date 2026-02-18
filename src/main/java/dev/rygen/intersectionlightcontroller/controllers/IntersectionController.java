@@ -2,6 +2,7 @@ package dev.rygen.intersectionlightcontroller.controllers;
 
 import dev.rygen.intersectionlightcontroller.dtos.IntersectionDTO;
 import dev.rygen.intersectionlightcontroller.dtos.IntersectionRequest;
+import dev.rygen.intersectionlightcontroller.dtos.PhaseDTO;
 import dev.rygen.intersectionlightcontroller.entities.Intersection;
 import dev.rygen.intersectionlightcontroller.services.IntersectionService;
 import dev.rygen.intersectionlightcontroller.services.WorkerService;
@@ -10,6 +11,8 @@ import lombok.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -26,6 +29,15 @@ public class IntersectionController {
     @GetMapping("/{id}")
     public ResponseEntity<IntersectionDTO> getIntersection(@PathVariable int id) {
         return ResponseEntity.ok(intersectionService.findById(id));
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<IntersectionDTO>> getIntersectionList() {
+        List<Intersection> intersectionList = intersectionService.findAll();
+
+        return ResponseEntity.ok(intersectionList.stream()
+                .map(IntersectionDTO::fromEntity)
+                .toList());
     }
 
     @PostMapping

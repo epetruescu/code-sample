@@ -13,12 +13,14 @@ import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
 
 @Service
+@Slf4j
 public class IntersectionService {
 
     @Resource
@@ -97,7 +99,7 @@ public class IntersectionService {
     }
 
     public List<Integer> findAllIdsActive() {
-        return intersectionRepository.findIntersectionIdByActive();
+        return intersectionRepository.findByActiveTrue();
     }
 
     public void updateIntersectionState(Integer intersectionId, Integer currentSequence, LightColor currentLight,
@@ -106,5 +108,9 @@ public class IntersectionService {
                 nextSequence, currentTime, intersectionId);
         phaseService.updatePhaseGroup(intersectionId, currentSequence, currentLight);
         phaseService.updatePhaseGroup(intersectionId, nextSequence, nextLight);
+    }
+
+    public List<Intersection> findAll() {
+        return intersectionRepository.findAll();
     }
 }

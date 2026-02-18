@@ -93,16 +93,16 @@ public class WorkerService {
         }
     }
 
-    private void ownershipCycle(Integer intersectionId) {
+    public boolean ownershipCycle(Integer intersectionId) {
         try {
             if (!leadershipElectionService.isLeader(intersectionId)) {
                 stopIntersection(intersectionId);
-                return;
+                return false;
             }
             boolean renewed = leadershipElectionService.renewLeadership(intersectionId, leadershipLeaseDuration);
             if (!renewed) {
                 stopIntersection(intersectionId);
-                return;
+                return false;
             }
             String lockKey = distributedLockService.getIntersectionStateLockKey(intersectionId);
             distributedLockService.executeWithLock(lockKey, 100, 5000, TimeUnit.MILLISECONDS, () -> checkPhases(intersectionId)
@@ -110,6 +110,7 @@ public class WorkerService {
         } catch (Exception e) {
             log.error("Error with intersection cycle for {}", intersectionId);
         }
+        return true;
     }
 
     public void stopIntersection(Integer intersectionId) {

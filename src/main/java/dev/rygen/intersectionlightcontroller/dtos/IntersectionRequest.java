@@ -6,7 +6,6 @@ import lombok.NonNull;
 
 @Builder
 public record IntersectionRequest(
-        @NonNull
         String name,
         Boolean active
 )

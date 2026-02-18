@@ -20,10 +20,11 @@ public interface IntersectionRepository extends JpaRepository<Intersection, Inte
     @Query("update Intersection i set i.name = ?1, i.active = ?2 where i.intersectionId = ?3")
     void updateNameAndActiveByIntersectionIdEquals(@NonNull String name, boolean active, int intersectionId);
 
-    List<Integer> findIntersectionIdByActive();
-
     @Transactional
     @Modifying
     @Query("update Intersection i set i.currentPhaseIndex = ?1, i.lastTransitionTime = ?2 where i.intersectionId = ?3")
     int updateCurrentPhaseIndexAndLastTransitionTimeByIntersectionIdEquals(int currentPhaseIndex, Instant lastTransitionTime, int intersectionId);
+
+    @Query("select i.intersectionId from Intersection i where i.active = true")
+    List<Integer> findByActiveTrue();
 }

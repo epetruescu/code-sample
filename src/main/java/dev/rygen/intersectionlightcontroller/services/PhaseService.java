@@ -12,10 +12,14 @@ import dev.rygen.intersectionlightcontroller.repositories.SignalGroupRepository;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
 
+@Service
+@Slf4j
 public class PhaseService {
 
     @Resource
