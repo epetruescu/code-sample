@@ -45,7 +45,7 @@ public class WorkerService {
 
     private final Map<Integer, ScheduledFuture<?>> runningIntersections = new ConcurrentHashMap<>();
 
-    @Value("${intersection.leadership.lease-duration:30000}")
+    @Value("${intersection.leadership.lease-duration:30}")
     private long leadershipLeaseDuration;
 
     @Value("${intersection.worker.interval:1}")
@@ -54,8 +54,9 @@ public class WorkerService {
     @PostConstruct
     public void init() {
         try {
-            List<Integer> activeIds = intersectionService.findAllIdsActive();
-            activeIds.forEach(this::startIntersection);
+            scheduledExecutorService.scheduleAtFixedRate(
+                    () -> intersectionService.findAllIdsActive().forEach(this::startIntersection),
+                    0, 10, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error("Unable to get leadership");
         }
@@ -111,7 +112,7 @@ public class WorkerService {
         }
     }
 
-    private void stopIntersection(Integer intersectionId) {
+    public void stopIntersection(Integer intersectionId) {
         ScheduledFuture<?> future = runningIntersections.remove(intersectionId);
         if (future != null) {
             future.cancel(false);
