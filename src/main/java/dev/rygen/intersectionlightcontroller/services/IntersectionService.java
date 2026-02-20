@@ -1,7 +1,8 @@
 package dev.rygen.intersectionlightcontroller.services;
 
 import dev.rygen.intersectionlightcontroller.dtos.IntersectionDTO;
-import dev.rygen.intersectionlightcontroller.dtos.IntersectionRequest;
+import dev.rygen.intersectionlightcontroller.dtos.requests.IntersectionUpdateRequest;
+import dev.rygen.intersectionlightcontroller.dtos.requests.IntersectionCreateRequest;
 import dev.rygen.intersectionlightcontroller.entities.Intersection;
 import dev.rygen.intersectionlightcontroller.entities.Phase;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
@@ -47,7 +48,7 @@ public class IntersectionService {
     }
 
     @Transactional
-    public IntersectionDTO create(IntersectionRequest request) {
+    public IntersectionDTO create(IntersectionCreateRequest request) {
         //Name is just a user description and doesnt have to be unique
         //in a real system it would be set apart from others by its physical location in lat and long
         Intersection intersection = Intersection.builder()
@@ -58,7 +59,7 @@ public class IntersectionService {
     }
 
     @Transactional
-    public IntersectionDTO update(Integer id, IntersectionRequest request) {
+    public IntersectionDTO update(Integer id, IntersectionUpdateRequest request) {
         Intersection intersection = intersectionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Intersection not found with id: " + id));
 

@@ -1,6 +1,7 @@
 package dev.rygen.intersectionlightcontroller.controllers;
 
 import dev.rygen.intersectionlightcontroller.dtos.SignalGroupDTO;
+import dev.rygen.intersectionlightcontroller.dtos.requests.SignalGroupCreateRequest;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
 import dev.rygen.intersectionlightcontroller.services.SignalGroupService;
 import jakarta.annotation.Resource;
@@ -36,7 +37,7 @@ public class SignalGroupController {
 
     @PostMapping
     public ResponseEntity<SignalGroupDTO> createSignalGroup(
-            @RequestBody SignalGroupDTO request) {
+            @RequestBody SignalGroupCreateRequest request) {
         SignalGroup signalGroup = signalGroupService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(SignalGroupDTO.fromEntity(signalGroup));

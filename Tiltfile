@@ -29,17 +29,18 @@ k8s_resource(workload="redis-master",
 
 print('Deploying docker build')
 
-# Build only when manually triggered - ignores source file changes
-docker_build(
-  'light-controller-ui-image',
-  '.',
-  ignore=['src/', 'gradle/', '.gradle/', '.git/', '.idea/', '.kiro/']
+docker_build('light-controller-ui-image','.',ignore=['.git/', '.idea/', 'light-controller-ui/'])
+
+docker_build('light-controller-frontend','./light-controller-ui',dockerfile='./light-controller-ui/Dockerfile',
+  live_update=[sync('./light-controller-ui/src', '/app/src'), run('npm install',
+  trigger=['./light-controller-ui/package.json'])]
 )
 
 k8s_yaml('deployment.yaml')
+k8s_yaml('./light-controller-ui/frontend-deployment.yaml')
 # Not used yet
 k8s_yaml('loadbalancer.yaml')
 
-k8s_resource('light-controller-ui', 
-    port_forwards=[8080],
-    trigger_mode=TRIGGER_MODE_MANUAL)
+k8s_resource('light-controller-ui', port_forwards=[8080], trigger_mode=TRIGGER_MODE_MANUAL, labels='backend')
+
+k8s_resource('light-controller-frontend',  port_forwards=[5173], labels='frontend')

@@ -1,6 +1,7 @@
 package dev.rygen.intersectionlightcontroller.services;
 
 import dev.rygen.intersectionlightcontroller.dtos.PhaseDTO;
+import dev.rygen.intersectionlightcontroller.dtos.requests.PhaseCreateRequest;
 import dev.rygen.intersectionlightcontroller.entities.Phase;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroupPhase;
@@ -8,14 +9,12 @@ import dev.rygen.intersectionlightcontroller.enums.LightColor;
 import dev.rygen.intersectionlightcontroller.repositories.IntersectionRepository;
 import dev.rygen.intersectionlightcontroller.repositories.PhaseRepository;
 import dev.rygen.intersectionlightcontroller.repositories.SignalGroupPhaseRepository;
-import dev.rygen.intersectionlightcontroller.repositories.SignalGroupRepository;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -48,13 +47,14 @@ public class PhaseService {
     }
 
     @Transactional
-    public Phase create(PhaseDTO request) {
+    public Phase create(PhaseCreateRequest request) {
         if (request.signalGroupIds().isEmpty()) {
             throw new IllegalArgumentException("Signal Group Ids are required");
         }
         if (!intersectionRepository.existsById(request.intersectionId())) {
             throw new EntityNotFoundException("Intersection not found with Id: " + request.intersectionId());
         }
+        log.info("Received request {} with sequence {}", request, request.sequence());
 
         Phase phase = Phase.builder()
                 .intersectionId(request.intersectionId())
@@ -126,7 +126,6 @@ public class PhaseService {
     }
 
     public void delete(Integer id) {
-        //Can be deleted and phase state change would happen else where
         phaseRepository.deleteById(id);
     }
 

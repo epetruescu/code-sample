@@ -1,14 +1,10 @@
 package dev.rygen.intersectionlightcontroller.controllers;
 
 import dev.rygen.intersectionlightcontroller.dtos.PhaseDTO;
-import dev.rygen.intersectionlightcontroller.dtos.SignalGroupDTO;
+import dev.rygen.intersectionlightcontroller.dtos.requests.PhaseCreateRequest;
 import dev.rygen.intersectionlightcontroller.entities.Phase;
-import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
-import dev.rygen.intersectionlightcontroller.repositories.IntersectionRepository;
 import dev.rygen.intersectionlightcontroller.services.PhaseService;
-import dev.rygen.intersectionlightcontroller.services.SignalGroupService;
 import jakarta.annotation.Resource;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +36,7 @@ public class PhaseController {
 
     @PostMapping
     public ResponseEntity<PhaseDTO> createPhase(
-            @RequestBody PhaseDTO request) {
+            @RequestBody PhaseCreateRequest request) {
         Phase phase = phaseService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(PhaseDTO.fromEntity(phase));

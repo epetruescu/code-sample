@@ -1,6 +1,7 @@
 package dev.rygen.intersectionlightcontroller.services;
 
 import dev.rygen.intersectionlightcontroller.dtos.SignalGroupDTO;
+import dev.rygen.intersectionlightcontroller.dtos.requests.SignalGroupCreateRequest;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroupPhase;
 import dev.rygen.intersectionlightcontroller.enums.LightColor;
@@ -40,7 +41,7 @@ public class SignalGroupService {
     }
 
     @Transactional
-    public SignalGroup create(SignalGroupDTO request) {
+    public SignalGroup create(SignalGroupCreateRequest request) {
         if (!intersectionRepository.existsById(request.intersectionId())) {
             throw new EntityNotFoundException("Intersection not found with Id: " + request.intersectionId());
         }
@@ -83,5 +84,9 @@ public class SignalGroupService {
     @Transactional
     public void updateLight(int signalGroupId, LightColor currentLight) {
         signalGroupRepository.updateCurrentColorBySignalGroupIdEquals(currentLight, signalGroupId);
+    }
+
+    public SignalGroup save(SignalGroup signalGroup) {
+        return signalGroupRepository.save(signalGroup);
     }
 }

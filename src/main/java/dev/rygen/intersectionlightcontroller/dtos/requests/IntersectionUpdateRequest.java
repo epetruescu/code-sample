@@ -1,16 +1,15 @@
-package dev.rygen.intersectionlightcontroller.dtos;
+package dev.rygen.intersectionlightcontroller.dtos.requests;
 
 import lombok.Builder;
-import lombok.NonNull;
 
 
 @Builder
-public record IntersectionRequest(
+public record IntersectionUpdateRequest(
         String name,
         Boolean active
 )
 {
-    public IntersectionRequest {
+    public IntersectionUpdateRequest {
         if (active == null) {
             active = false;
         }
