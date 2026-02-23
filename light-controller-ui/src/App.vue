@@ -18,10 +18,6 @@ const newIntersectionName = ref('')
 const store = reactive({
   count: 0
 })
-const props = defineProps<{
-  selectedIntersection: IntersectionDTO | null
-}>()
-
 const showDeleteConfirm = ref(false)
 const intersectionToDelete = ref<IntersectionDTO | null>(null)
 
@@ -104,13 +100,14 @@ onMounted(() => {
                    @click="selectedIntersection = intersection">
         <template v-slot:append>
           <v-btn
-            variant="text"
+            :color="intersection.active ? 'success' : 'grey'"
             icon
             size="x-small"
+            variant="outlined"
             @click.stop="activeIntersection(intersection)"
           >
-            <v-icon :color="intersection.active ? 'success' : 'error'">
-              {{ intersection.active ? 'mdi-power-settings-outline' : 'mdi-power-off' }}
+            <v-icon>
+              {{ intersection.active ? 'mdi-power' : 'mdi-power-off' }}
             </v-icon>
           </v-btn>
           <v-btn icon size="small" variant="text" @click.stop="confirmDelete(intersection)">
@@ -125,10 +122,10 @@ onMounted(() => {
 
     </v-app-bar>
     <v-main>
-      <IntersectionDetails :selected-intersection="selectedIntersection"/>
-      <!-- main content -->
+      <IntersectionDetails :selected-intersection="selectedIntersection" />
     </v-main>
-    <AddIntersectionDialog v-model="showAddIntersection" title="Add Intersection"
+    <AddIntersectionDialog v-model="showAddIntersection"
+                           title="Add Intersection"
                            @add="addIntersection"/>
     <v-dialog v-model="showDeleteConfirm" max-width="400">
       <v-card>

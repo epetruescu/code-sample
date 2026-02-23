@@ -97,11 +97,13 @@ public class WorkerService {
         try {
             if (!leadershipElectionService.isLeader(intersectionId)) {
                 stopIntersection(intersectionId);
+                log.debug("Not Intersection Leader: {}", intersectionId);
                 return false;
             }
             boolean renewed = leadershipElectionService.renewLeadership(intersectionId, leadershipLeaseDuration);
             if (!renewed) {
                 stopIntersection(intersectionId);
+                log.debug("Unable to renew Intersection Leader: {}", intersectionId);
                 return false;
             }
             String lockKey = distributedLockService.getIntersectionStateLockKey(intersectionId);
@@ -122,12 +124,14 @@ public class WorkerService {
     }
 
     private void checkPhases(Integer intersectionId) {
+        log.debug("Check phase for Intersection {}", intersectionId);
         RMap<String, Object> state = redissonClient.getMap(INTERSECTION_STATE_KEY + intersectionId);
         Integer phaseIndex = (Integer) state.getOrDefault(PHASE_INDEX, 0);
         Instant lastTransitionTime = (Instant) state.getOrDefault(LAST_TRANSITION_TIME, Instant.now());
         Long cycleCount = (Long) state.getOrDefault(CYCLE_COUNT, 0L);
 
         Phase currentPhase = phaseService.findByIntersectionIdAndPhaseSequence(intersectionId, phaseIndex);
+        log.debug("Check phase for phase sequence{}", currentPhase.getSequence());
         Instant currentTime = Instant.now();
 
         if (currentTime.isBefore(lastTransitionTime.plusSeconds(currentPhase.getGreenDuration()))) {
@@ -145,6 +149,7 @@ public class WorkerService {
     private void nextPhase(Integer intersectionId, Phase currentPhase, Instant currentTime, RMap<String, Object> state) {
         long numberOfPhases = phaseService.countByIntersectionId(intersectionId);
         int nextIndex = (currentPhase.getSequence() + 1) % (int) numberOfPhases;
+        log.debug("Next phase for intersection {}", intersectionId);
 
         //update intersection by Id with current phase color and next phase color
         state.fastPut(PHASE_INDEX, nextIndex);

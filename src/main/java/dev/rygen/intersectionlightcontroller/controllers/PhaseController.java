@@ -5,6 +5,7 @@ import dev.rygen.intersectionlightcontroller.dtos.requests.PhaseCreateRequest;
 import dev.rygen.intersectionlightcontroller.entities.Phase;
 import dev.rygen.intersectionlightcontroller.services.PhaseService;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/phase")
+@Slf4j
 public class PhaseController {
 
     @Resource
@@ -52,6 +54,7 @@ public class PhaseController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePhase(@PathVariable Integer id) {
+        log.debug("Delete Phase {}", id);
         phaseService.delete(id);
         return ResponseEntity.noContent().build();
     }

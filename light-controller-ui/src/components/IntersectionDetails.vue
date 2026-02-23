@@ -18,13 +18,16 @@ const props = defineProps<{
 }>()
 const intersection = ref<IntersectionDTO>()
 
+const phaseToEdit = ref<PhaseDTO | null>(null)
+
 watch(() => props.selectedIntersection, (newValue) => {
   if (newValue) {
     fetchIntersectionDetails()
   }
-}, { immediate: true })
-const editPhase = (phase: PhaseDTO | null) => {
-
+}, {immediate: true})
+const editPhase = (phase: PhaseDTO) => {
+  phaseToEdit.value = phase
+  showAddPhasePopUp.value = true
 }
 
 const highLightSignalGroups = (phase: PhaseDTO | null) => {
@@ -78,28 +81,44 @@ const addSignalGroup = async (signalGroupName: string) => {
   }
 }
 
-const addPhase = async (phaseCreation: PhasePopupCreateRequest) => {
+const savePhase = async (phaseData: PhaseCreateRequest, isEdit: boolean, phaseId?: number) => {
   try {
     if (props.selectedIntersection?.id !== undefined) {
-      const selectedSignalGroupIds = phaseCreation?.signalGroupIds
-        ? (typeof phaseCreation.signalGroupIds[0] === 'number'
-          ? phaseCreation.signalGroupIds as number[]
-          : (phaseCreation.signalGroupIds as any[]).map(item => item.id).filter((id): id is number => id !== undefined))
-        : []
-      console.log("Selected ids " + selectedSignalGroupIds)
-      const intersectionResponse = await phaseApi.createPhase({
-        intersectionId: props.selectedIntersection.id,
-        greenDuration: Number(phaseCreation.greenDuration),
+      const selectedSignalGroupIds = phaseData?.signalGroupIds?.map(item => 
+        typeof item === 'number' ? item : (item as any).id
+      ).filter((id): id is number => id !== undefined) || []
+      
+      console.log("Selected ids", selectedSignalGroupIds)
+      console.log("Phase data being sent:", {
+        greenDuration: Number(phaseData.greenDuration),
         signalGroupIds: selectedSignalGroupIds,
-        yellowDuration: Number(phaseCreation.yellowDuration),
-        sequence: Number(phaseCreation.sequence)
+        yellowDuration: Number(phaseData.yellowDuration),
+        sequence: Number(phaseData.sequence)
       })
-      intersection.value = intersectionResponse.data
+      
+      if (isEdit && phaseId) {
+        await phaseApi.updatePhase(phaseId, {
+          greenDuration: Number(phaseData.greenDuration),
+          signalGroupIds: selectedSignalGroupIds,
+          yellowDuration: Number(phaseData.yellowDuration),
+          sequence: Number(phaseData.sequence)
+        })
+      } else {
+        await phaseApi.createPhase({
+          intersectionId: props.selectedIntersection.id,
+          greenDuration: Number(phaseData.greenDuration),
+          signalGroupIds: selectedSignalGroupIds,
+          yellowDuration: Number(phaseData.yellowDuration),
+          sequence: Number(phaseData.sequence)
+        })
+      }
+      
       await fetchIntersectionDetails()
-      console.log("Fetching intersections")
+      phaseToEdit.value = null
+      console.log("Phase saved successfully")
     }
   } catch (error) {
-    console.error('Failed to fetch intersections:', error)
+    console.error('Failed to save phase:', error)
   }
 }
 
@@ -137,18 +156,16 @@ onMounted(() => {
     >
       <v-col :cols="cols[0]">
         <v-btn :disabled="!selectedIntersection || selectedIntersection.active"
-        @click="showAddPhasePopUp = !showAddPhasePopUp">
+               @click="phaseToEdit = null; showAddPhasePopUp = true">
           Add Phase
         </v-btn>
         <v-sheet class="pa-2 ma-2">
-          .v-col-{{ cols[0] }}
-
         </v-sheet>
         <v-sheet v-for="phase in intersection ?.phases"
                  :key="phase.id"
                  class="pa-2 ma-2"
                  link
-                 title="Phase " + intersection?.phases.sequence
+                 :title="`Phase ${phase.sequence}`"
                  @click="highLightSignalGroups(phase)">
           <div class="d-flex justify-space-between align-center">
             <span>Phase {{ phase.sequence }}</span>
@@ -199,7 +216,8 @@ onMounted(() => {
     v-model="showAddPhasePopUp"
     title="Add Phase"
     :signal-groups="intersection?.signalGroups || []"
-    @add="addPhase"
+    :phase-to-edit="phaseToEdit"
+    @save="savePhase"
   />
   <AddSignalGroupPopUp v-model="showAddSignalGroupPopUp" @add="addSignalGroup"/>
 

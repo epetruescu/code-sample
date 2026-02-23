@@ -5,6 +5,7 @@ import dev.rygen.intersectionlightcontroller.dtos.requests.SignalGroupCreateRequ
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
 import dev.rygen.intersectionlightcontroller.services.SignalGroupService;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/signal-groups")
+@Slf4j
 public class SignalGroupController {
 
     @Resource
@@ -53,6 +55,7 @@ public class SignalGroupController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSignalGroup(@PathVariable Integer id) {
+        log.debug("Delete Signal Group {}", id);
         signalGroupService.delete(id);
         return ResponseEntity.noContent().build();
     }

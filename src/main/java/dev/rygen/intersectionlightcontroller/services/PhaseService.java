@@ -108,7 +108,7 @@ public class PhaseService {
 
                 SignalGroup signalGroup = signalGroupService.findById(signalGroupId);
                 
-                if (signalGroup.getIntersectionId() == phase.getIntersectionId()) {
+                if (signalGroup.getIntersectionId() != phase.getIntersectionId()) {
                     throw new IllegalArgumentException(
                             "Signal group " + signalGroupId + " does not belong to intersection " + phase.getIntersectionId()
                     );

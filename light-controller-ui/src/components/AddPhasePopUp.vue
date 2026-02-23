@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {computed, ref} from "vue";
-import type {PhaseCreateRequest, SignalGroupDTO} from "@/generated";
+import type {PhaseCreateRequest, PhaseDTO, SignalGroupDTO} from "@/generated";
 
 interface PhaseCreateRequestDTO {
   greenDuration?: number;
@@ -14,11 +14,12 @@ const props = defineProps<{
   modelValue: boolean,
   title: String,
   signalGroups: SignalGroupDTO[]
+  phaseToEdit: PhaseDTO | null
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'add': [PhaseCreateRequestDTO]
+  'save': [phase: PhaseCreateRequest, isEdit: boolean, phaseId?: number]
 }>()
 
 const greenDuration = ref(10)
@@ -28,19 +29,15 @@ const sequence = ref(1)
 
 
 const handleAdd = () => {
-  emit('add', {
+  const isEdit = !!props.phaseToEdit
+  emit('save', {
+    sequence: sequence.value,
     greenDuration: greenDuration.value,
     yellowDuration: yellowDuration.value,
-    sequence: sequence.value,
     signalGroupIds: signalGroupIds.value
-  })
-  greenDuration.value = 10
-  yellowDuration.value = 2
-  sequence.value = 1
-  signalGroupIds.value = []
+  }, isEdit, props.phaseToEdit?.id)
   emit('update:modelValue', false)
 }
-
 console.log('Add PhasePopUp component')
 
 </script>
@@ -49,7 +46,7 @@ console.log('Add PhasePopUp component')
   <v-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)"
             max-width="500">
     <v-card>
-      <v-card-title>Add Phase</v-card-title>
+      <v-card-title>Edit Phase</v-card-title>
       <v-card-text>
         <v-text-field
           v-model="sequence"
@@ -89,7 +86,7 @@ console.log('Add PhasePopUp component')
       <v-card-actions>
         <v-spacer/>
         <v-btn @click="emit('update:modelValue', false)">Cancel</v-btn>
-        <v-btn color="primary" @click="handleAdd">Add</v-btn>
+        <v-btn color="primary" @click="handleAdd">Save</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

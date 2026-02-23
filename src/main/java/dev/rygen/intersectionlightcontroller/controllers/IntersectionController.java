@@ -8,6 +8,7 @@ import dev.rygen.intersectionlightcontroller.services.IntersectionService;
 import dev.rygen.intersectionlightcontroller.services.WorkerService;
 import jakarta.annotation.Resource;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping("/intersections")
+@Slf4j
 public class IntersectionController {
 
     @Resource
@@ -62,6 +64,7 @@ public class IntersectionController {
 
     @DeleteMapping("/{id}")
     public void deleteIntersection(@PathVariable int id) {
+        log.debug("Delete Intersection {}", id);
         intersectionService.deleteIntersection(id);
     }
 }
