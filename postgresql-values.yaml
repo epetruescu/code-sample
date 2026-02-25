@@ -9,7 +9,10 @@ primary:
 
 auth:
   username: "postgres"
-  postgresqlPassword: "postgrespassword"
+  user: "postgres"
+  postgresPassword: "postgrespassword"
+  password: "postgrespassword"
+  replicationPassword: "postgrespassword"
   database: "lightcontrollerdb"
 
 volumePermissions:

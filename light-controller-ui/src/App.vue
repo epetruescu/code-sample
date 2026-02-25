@@ -48,6 +48,7 @@ const addIntersection = async (name: string) => {
 
 const activeIntersection = async (intersection: IntersectionDTO) => {
   try {
+    console.log("Active intersection:", intersection.active)
     await intersectionApi.updateIntersection(intersection.id!, {
       active: !intersection.active
     })

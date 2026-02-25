@@ -1,11 +1,14 @@
 package dev.rygen.intersectionlightcontroller.services;
 
 import dev.rygen.intersectionlightcontroller.dtos.IntersectionDTO;
+import dev.rygen.intersectionlightcontroller.dtos.PhaseDTO;
+import dev.rygen.intersectionlightcontroller.dtos.SignalGroupDTO;
 import dev.rygen.intersectionlightcontroller.dtos.requests.IntersectionUpdateRequest;
 import dev.rygen.intersectionlightcontroller.dtos.requests.IntersectionCreateRequest;
 import dev.rygen.intersectionlightcontroller.entities.Intersection;
 import dev.rygen.intersectionlightcontroller.entities.Phase;
 import dev.rygen.intersectionlightcontroller.entities.SignalGroup;
+import dev.rygen.intersectionlightcontroller.entities.SignalGroupPhase;
 import dev.rygen.intersectionlightcontroller.enums.LightColor;
 import dev.rygen.intersectionlightcontroller.repositories.IntersectionRepository;
 import dev.rygen.intersectionlightcontroller.repositories.PhaseRepository;
@@ -38,13 +41,39 @@ public class IntersectionService {
 
     @Resource
     private PhaseService phaseService;
+    
+    @Resource
+    private dev.rygen.intersectionlightcontroller.repositories.SignalGroupPhaseRepository signalGroupPhaseRepository;
 
     public IntersectionDTO findById(Integer id) {
         Intersection intersection = intersectionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Intersection not found with id: " + id));
         List<Phase> phases = phaseRepository.findByIntersectionIdEquals(id);
-        List<SignalGroup> signalGroups = signalGroupRepository.findByIntersectionIdEquals(id);
-        return IntersectionDTO.fromEntityWithCollections(intersection, phases, signalGroups);
+        List<SignalGroup> signalGroups = signalGroupRepository.findByIntersectionIdEqualsOrderBySignalGroupIdAsc(id);
+
+        List<PhaseDTO> phaseDTOs = phases.stream()
+                .map(phase -> {
+                    List<Integer> signalGroupIds = signalGroupPhaseRepository.findByPhaseId(phase.getPhaseId())
+                            .stream()
+                            .map(SignalGroupPhase::getSignalGroupId)
+                            .toList();
+                    return PhaseDTO.fromEntityWithSignalGroups(phase, signalGroupIds);
+                })
+                .toList();
+
+        List<SignalGroupDTO> signalGroupDTOs = signalGroups.stream()
+                .map(SignalGroupDTO::fromEntity)
+                .toList();
+
+        return new IntersectionDTO(
+                intersection.getIntersectionId(),
+                intersection.getName(),
+                intersection.isActive(),
+                intersection.getLastTransitionTime(),
+                intersection.getCurrentPhaseIndex(),
+                phaseDTOs,
+                signalGroupDTOs
+        );
     }
 
     @Transactional
@@ -68,17 +97,42 @@ public class IntersectionService {
         }
 
         List<Phase> phases = phaseRepository.findByIntersectionIdEquals(id);
-        List<SignalGroup> signalGroups = signalGroupRepository.findByIntersectionIdEquals(id);
+        List<SignalGroup> signalGroups = signalGroupRepository.findByIntersectionIdEqualsOrderBySignalGroupIdAsc(id);
 
-        if (request.active() !=null && request.active()) {
+        if (request.active() != null && request.active()) {
             if (phases.isEmpty() || signalGroups.isEmpty()) {
                 throw new IllegalStateException("Intersection " + id + " requires at least one Phase and Signal Group");
             }
             intersection.setActive(true);
+        } else {
+            intersection.setActive(false);
         }
-        
+
         intersection = intersectionRepository.save(intersection);
-        return IntersectionDTO.fromEntityWithCollections(intersection, phases, signalGroups);
+
+        List<PhaseDTO> phaseDTOs = phases.stream()
+                .map(phase -> {
+                    List<Integer> signalGroupIds = signalGroupPhaseRepository.findByPhaseId(phase.getPhaseId())
+                            .stream()
+                            .map(SignalGroupPhase::getSignalGroupId)
+                            .toList();
+                    return PhaseDTO.fromEntityWithSignalGroups(phase, signalGroupIds);
+                })
+                .toList();
+
+        List<SignalGroupDTO> signalGroupDTOs = signalGroups.stream()
+                .map(SignalGroupDTO::fromEntity)
+                .toList();
+        
+        return new IntersectionDTO(
+                intersection.getIntersectionId(),
+                intersection.getName(),
+                intersection.isActive(),
+                intersection.getLastTransitionTime(),
+                intersection.getCurrentPhaseIndex(),
+                phaseDTOs,
+                signalGroupDTOs
+        );
     }
 
     @Transactional

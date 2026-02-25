@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {computed, onMounted, ref, watch} from "vue";
+import {computed, onMounted, onUnmounted, ref, watch} from "vue";
 import {useApi} from '../useApis'
 import type {IntersectionDTO, PhaseCreateRequest, PhaseDTO, SignalGroupDTO} from "@/generated";
 import {useDisplay} from "vuetify/framework";
@@ -20,11 +20,27 @@ const intersection = ref<IntersectionDTO>()
 
 const phaseToEdit = ref<PhaseDTO | null>(null)
 
+let pollingInterval: number | null = null
+
 watch(() => props.selectedIntersection, (newValue) => {
   if (newValue) {
     fetchIntersectionDetails()
   }
 }, {immediate: true})
+
+watch(() => props.selectedIntersection?.active, (isActive) => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+    pollingInterval = null
+  }
+
+  if (isActive && props.selectedIntersection?.id) {
+    pollingInterval = setInterval(() => {
+      fetchIntersectionDetails()
+    }, 1000)
+  }
+}, { immediate: true })
+
 const editPhase = (phase: PhaseDTO) => {
   phaseToEdit.value = phase
   showAddPhasePopUp.value = true
@@ -60,6 +76,9 @@ const fetchIntersectionDetails = async () => {
       console.log("Fetching intersections on mount")
     }
   } catch (error) {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+    }
     console.error('Failed to fetch intersections:', error)
   }
 }
@@ -84,10 +103,10 @@ const addSignalGroup = async (signalGroupName: string) => {
 const savePhase = async (phaseData: PhaseCreateRequest, isEdit: boolean, phaseId?: number) => {
   try {
     if (props.selectedIntersection?.id !== undefined) {
-      const selectedSignalGroupIds = phaseData?.signalGroupIds?.map(item => 
+      const selectedSignalGroupIds = phaseData?.signalGroupIds?.map(item =>
         typeof item === 'number' ? item : (item as any).id
       ).filter((id): id is number => id !== undefined) || []
-      
+
       console.log("Selected ids", selectedSignalGroupIds)
       console.log("Phase data being sent:", {
         greenDuration: Number(phaseData.greenDuration),
@@ -95,7 +114,7 @@ const savePhase = async (phaseData: PhaseCreateRequest, isEdit: boolean, phaseId
         yellowDuration: Number(phaseData.yellowDuration),
         sequence: Number(phaseData.sequence)
       })
-      
+
       if (isEdit && phaseId) {
         await phaseApi.updatePhase(phaseId, {
           greenDuration: Number(phaseData.greenDuration),
@@ -112,7 +131,7 @@ const savePhase = async (phaseData: PhaseCreateRequest, isEdit: boolean, phaseId
           sequence: Number(phaseData.sequence)
         })
       }
-      
+
       await fetchIntersectionDetails()
       phaseToEdit.value = null
       console.log("Phase saved successfully")
@@ -144,6 +163,13 @@ const phaseConfirmDelete = (phase: PhaseDTO) => {
 onMounted(() => {
   fetchIntersectionDetails()
 })
+
+onUnmounted(() => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+  }
+})
+
 </script>
 
 <template>

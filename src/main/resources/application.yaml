@@ -5,13 +5,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: jdbc:postgresql://postgresql:5432/lightcontrollerdb
+    username: postgres
+    password: postgrespassword
+
   data:
     redis:
       host: "redis-master"
       port: 6379
       password: "redispassword"
 
-datasource:
-  url: jdbc:postgresql://postgres:5432/lightcontrollerdb
-  username: postgres
-  password: postgrespassword
+logging:
+  level:
+    dev.rygen.intersectionlightcontroller: DEBUG

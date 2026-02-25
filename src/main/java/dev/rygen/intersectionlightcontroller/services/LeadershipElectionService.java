@@ -6,6 +6,8 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -16,10 +18,22 @@ public class LeadershipElectionService {
     @Resource
     RedissonClient redissonClient;
 
-    public boolean tryBecomeLeader(Integer intersectionId, long leadershipLeaseDuration) {
+    private final Map<Integer, RLock> heldLocks = new ConcurrentHashMap<>();
+
+    public boolean tryBecomeLeader(Integer intersectionId) {
         RLock lock = redissonClient.getLock(INTERSECTION_LEADER_KEY + intersectionId);
         try {
-            return lock.tryLock(0, leadershipLeaseDuration, TimeUnit.SECONDS);
+            //This is autorenewed
+            boolean acquired = lock.tryLock(0, TimeUnit.SECONDS);
+            if (acquired) {
+                heldLocks.put(intersectionId, lock);
+                log.info("Successfully acquired leadership for intersection {}", intersectionId);
+            }
+            return acquired;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted while acquiring lock for intersection {}", intersectionId, e);
+            return false;
         } catch (Exception e) {
             Thread.currentThread().interrupt();
             log.error("Error while getting lock {}", intersectionId, e);
@@ -28,37 +42,51 @@ public class LeadershipElectionService {
     }
 
     public void releaseLeadership(Integer intersectionId) {
-        RLock lock = redissonClient.getLock(INTERSECTION_LEADER_KEY + intersectionId);
-        if (lock.isHeldByCurrentThread()) {
-            try {
-                lock.unlock();
-                log.info("Released leadership for intersection {}", intersectionId);
-            } catch (Exception e) {
-                log.warn("Unable to release lock for intersection {}", intersectionId);
-            }
+        RLock lock = heldLocks.get(intersectionId);
+
+        if (lock == null) {
+            log.debug("Leadership not held for intersection {}", intersectionId);
+            return;
         }
+        try {
+            if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+                log.info("Releasing leadership for intersection {}", intersectionId);
+            } else if (lock.isLocked()) {
+                log.warn("Lock for intersection {} is not held by current thread", intersectionId);
+                lock.forceUnlock();
+            }
+
+        } catch (Exception e) {
+            lock.forceUnlock();
+            log.error("Error while releasing leadership for intersection {}", intersectionId);
+        } finally {
+            heldLocks.remove(intersectionId);
+        }
+
     }
 
     public boolean isLeader(Integer intersectionId) {
-        RLock lock = redissonClient.getLock(INTERSECTION_LEADER_KEY + intersectionId);
-        return lock.isHeldByCurrentThread();
+        return heldLocks.containsKey(intersectionId);
     }
 
-    public boolean renewLeadership(Integer intersectionId, long leadershipLeaseDuration) {
-        RLock lock = redissonClient.getLock(INTERSECTION_LEADER_KEY + intersectionId);
-        if (!lock.isHeldByCurrentThread()) {
+    public boolean renewLeadership(Integer intersectionId) {
+        RLock lock = heldLocks.get(intersectionId);
+
+        if (lock == null) {
+            log.warn("Attempt to renew leadership for intersection {} but no lock held", intersectionId);
             return false;
         }
-
         try {
-            boolean renewed = lock.tryLock(0, leadershipLeaseDuration, TimeUnit.SECONDS);
-            if (!renewed) {
-                log.warn("Failed to renew leadership for intersection {}", intersectionId);
+            if (!lock.isHeldByCurrentThread()) {
+                log.warn("Leadership for intersection {} is not held by current thread", intersectionId);
+                heldLocks.remove(intersectionId);
+                return false;
             }
-            return renewed;
+            return true;
         } catch (Exception e) {
-            Thread.currentThread().interrupt();
             log.error("Error while renewing leadership for intersection {}", intersectionId, e);
+            heldLocks.remove(intersectionId);
             return false;
         }
     }

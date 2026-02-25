@@ -52,13 +52,15 @@ public class IntersectionController {
     public ResponseEntity<IntersectionDTO> updateIntersection(
             @NonNull @PathVariable Integer id,
             @RequestBody IntersectionUpdateRequest request) {
+        log.info("Received Intersection update: {} : request {}", id, request);
         IntersectionDTO intersectionDTO = intersectionService.update(id, request);
+        log.info("Received Intersection update: {} : active {}", id, intersectionDTO.active());
         if(intersectionDTO.active()) {
             workerService.startIntersection(intersectionDTO.id());
         } else {
             workerService.stopIntersection(intersectionDTO.id());
         }
-        return ResponseEntity.ok(intersectionService.update(id, request));
+        return ResponseEntity.ok(intersectionDTO);
     }
 
 

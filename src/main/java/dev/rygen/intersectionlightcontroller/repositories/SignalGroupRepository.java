@@ -12,6 +12,8 @@ import java.util.List;
 
 @Repository
 public interface SignalGroupRepository extends JpaRepository<SignalGroup, Integer> {
+    List<SignalGroup> findByIntersectionIdEqualsOrderBySignalGroupIdAsc(int intersectionId);
+    
     List<SignalGroup> findByIntersectionIdEquals(int intersectionId);
 
     @Transactional
@@ -24,7 +26,7 @@ public interface SignalGroupRepository extends JpaRepository<SignalGroup, Intege
     long deleteBySignalGroupIdAndIntersectionIdEquals(int signalGroupId, int intersectionId);
 
     @Transactional
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("update SignalGroup s set s.currentColor = ?1 where s.signalGroupId = ?2")
     int updateCurrentColorBySignalGroupIdEquals(LightColor currentColor, int signalGroupId);
 }

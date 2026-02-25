@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import type {PhaseCreateRequest, PhaseDTO, SignalGroupDTO} from "@/generated";
 
 interface PhaseCreateRequestDTO {
@@ -24,8 +24,25 @@ const emit = defineEmits<{
 
 const greenDuration = ref(10)
 const yellowDuration = ref(2)
-const signalGroupIds = ref([])
-const sequence = ref(1)
+const signalGroupIds = ref<any[]>([])
+const sequence = ref(0)
+
+// Watch for phaseToEdit changes and populate form
+watch(() => props.phaseToEdit, (phase) => {
+  if (phase) {
+    greenDuration.value = phase.greenDuration || 10
+    yellowDuration.value = phase.yellowDuration || 2
+    sequence.value = phase.sequence || 0
+    signalGroupIds.value = props.signalGroups.filter(sg =>
+      phase.signalGroupIds?.includes(sg.id!)
+    )
+  } else {
+    greenDuration.value = 10
+    yellowDuration.value = 2
+    signalGroupIds.value = []
+    sequence.value = 0
+  }
+}, { immediate: true })
 
 
 const handleAdd = () => {
@@ -53,7 +70,7 @@ console.log('Add PhasePopUp component')
           label="Sequence"
           type="number"
           :rules="[
-            v => v > 1 || 'Sequence must be greater than 1'
+            v => v > 0 || 'Sequence must be greater than 0'
           ]"/>
         <v-text-field
           v-model="greenDuration"

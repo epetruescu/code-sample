@@ -24,7 +24,7 @@ public class WorkerService {
     public static final String CYCLE_COUNT = "cycleCount";
     public static final String LAST_TRANSITION_TIME = "lastTransitionTime";
     public static final String PHASE_INDEX = "phaseIndex";
-    public static final String CURRENT_LIGHT = "CurrentLight";
+    public static final String CURRENT_LIGHT = "currentLight";
     @Resource
     private DistributedLockService distributedLockService;
 
@@ -44,6 +44,10 @@ public class WorkerService {
     private RedissonClient redissonClient;
 
     private final Map<Integer, ScheduledFuture<?>> runningIntersections = new ConcurrentHashMap<>();
+
+    private final Map<Integer, Integer> errorCounts = new ConcurrentHashMap<>();
+
+    private static final int MAX_CONSECUTIVE_ERRORS = 5;
 
     @Value("${intersection.leadership.lease-duration:30}")
     private long leadershipLeaseDuration;
@@ -68,7 +72,7 @@ public class WorkerService {
             log.info("Intersection {} is already running", intersectionId);
             return;
         }
-        if (!leadershipElectionService.tryBecomeLeader(intersectionId, leadershipLeaseDuration)) {
+        if (!leadershipElectionService.tryBecomeLeader(intersectionId)) {
             log.debug("Unable to acquire leadership {}", intersectionId);
             return;
         }
@@ -100,17 +104,27 @@ public class WorkerService {
                 log.debug("Not Intersection Leader: {}", intersectionId);
                 return false;
             }
-            boolean renewed = leadershipElectionService.renewLeadership(intersectionId, leadershipLeaseDuration);
+            boolean renewed = leadershipElectionService.renewLeadership(intersectionId);
             if (!renewed) {
                 stopIntersection(intersectionId);
                 log.debug("Unable to renew Intersection Leader: {}", intersectionId);
                 return false;
             }
             String lockKey = distributedLockService.getIntersectionStateLockKey(intersectionId);
-            distributedLockService.executeWithLock(lockKey, 100, 5000, TimeUnit.MILLISECONDS, () -> checkPhases(intersectionId)
+            distributedLockService.executeWithLock(lockKey, 100, 5000, TimeUnit.MILLISECONDS,
+                    () -> checkPhases(intersectionId)
             );
+            errorCounts.remove(intersectionId);
         } catch (Exception e) {
-            log.error("Error with intersection cycle for {}", intersectionId);
+            int count = errorCounts.compute(intersectionId, (k, v) -> (v == null) ? 1 : v + 1);
+            log.error("Error with intersection cycle for {} message: {}", intersectionId, e.getMessage(), e);
+            if (count >= MAX_CONSECUTIVE_ERRORS) {
+                log.error("Intersection {} has failed {} consecutive times",
+                        intersectionId, count);
+                stopIntersection(intersectionId);
+                errorCounts.remove(intersectionId);
+                return false;
+            }
         }
         return true;
     }
@@ -121,6 +135,7 @@ public class WorkerService {
             future.cancel(false);
         }
         leadershipElectionService.releaseLeadership(intersectionId);
+        errorCounts.remove(intersectionId);
     }
 
     private void checkPhases(Integer intersectionId) {
@@ -131,13 +146,17 @@ public class WorkerService {
         Long cycleCount = (Long) state.getOrDefault(CYCLE_COUNT, 0L);
 
         Phase currentPhase = phaseService.findByIntersectionIdAndPhaseSequence(intersectionId, phaseIndex);
+        if (currentPhase == null) {
+            log.warn("No phase found for intersection {} and phase index {}", intersectionId, phaseIndex);
+            return;
+        }
         log.debug("Check phase for phase sequence{}", currentPhase.getSequence());
         Instant currentTime = Instant.now();
+        long secondsSinceTransition = currentTime.getEpochSecond() - lastTransitionTime.getEpochSecond();
 
-        if (currentTime.isBefore(lastTransitionTime.plusSeconds(currentPhase.getGreenDuration()))) {
+        if (secondsSinceTransition < currentPhase.getGreenDuration()) {
             updateSignalColor(LightColor.GREEN, intersectionId, currentPhase, state);
-        } else if(currentTime.isBefore(lastTransitionTime.plusSeconds(
-                currentPhase.getGreenDuration() + currentPhase.getYellowDuration()))) {
+        } else if(secondsSinceTransition < currentPhase.getGreenDuration() + currentPhase.getYellowDuration()) {
             updateSignalColor(LightColor.YELLOW, intersectionId, currentPhase, state);
         } else {
            nextPhase(intersectionId, currentPhase, currentTime, state);
@@ -147,24 +166,38 @@ public class WorkerService {
     }
 
     private void nextPhase(Integer intersectionId, Phase currentPhase, Instant currentTime, RMap<String, Object> state) {
-        long numberOfPhases = phaseService.countByIntersectionId(intersectionId);
-        int nextIndex = (currentPhase.getSequence() + 1) % (int) numberOfPhases;
+        List<Phase> phases = phaseService.findByIntersectionId(intersectionId);
+        List<Integer> sequences = phases.stream().map(Phase::getSequence).toList();
+        if (sequences.isEmpty()) {
+            log.error("No Phases found for intersection {}", intersectionId);
+            return;
+        }
+        int currentIndex = sequences.indexOf(currentPhase.getSequence());
+
+        if (currentIndex == -1) {
+            log.error("Current phase {} not found in phase list for intersection {}",
+                    currentPhase.getSequence(), intersectionId);
+            return;
+        }
         log.debug("Next phase for intersection {}", intersectionId);
 
+        int nextIndex = (currentIndex + 1) % sequences.size();
+        Integer nextSequence = sequences.get(nextIndex);
+
         //update intersection by Id with current phase color and next phase color
-        state.fastPut(PHASE_INDEX, nextIndex);
-        state.fastPut(CURRENT_LIGHT, LightColor.GREEN.name());
+        state.fastPut(PHASE_INDEX, nextSequence);
+        state.fastPut(CURRENT_LIGHT, LightColor.GREEN);  // FIX: Store enum, not string
         state.fastPut(LAST_TRANSITION_TIME, currentTime);
         intersectionService.updateIntersectionState(intersectionId, currentPhase.getSequence(), LightColor.RED,
-                nextIndex, LightColor.GREEN, currentTime);
+                nextSequence, LightColor.GREEN, currentTime);
     }
 
     private void updateSignalColor(LightColor currentLightColor, Integer intersectionId, Phase currentPhase,
                                    RMap<String, Object> state) {
 
-        LightColor stateLightColor = (LightColor) state.getOrDefault(CURRENT_LIGHT, LightColor.GREEN);
+        LightColor stateLightColor = (LightColor) state.get(CURRENT_LIGHT);
 
-        if (stateLightColor != currentLightColor) {
+        if (stateLightColor == null || stateLightColor != currentLightColor) {
             state.put(CURRENT_LIGHT, currentLightColor);
             phaseService.updatePhaseGroup(intersectionId, currentPhase.getSequence(), currentLightColor);
         }

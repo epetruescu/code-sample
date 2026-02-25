@@ -37,7 +37,7 @@ public class PhaseService {
         if (!intersectionRepository.existsById(intersectionId)) {
             throw new EntityNotFoundException("Intersection not found with Id: " + intersectionId);
         }
-        return phaseRepository.findByIntersectionIdEquals(intersectionId);
+        return phaseRepository.findByIntersectionIdEqualsOrderBySequenceAsc(intersectionId);
     }
 
     public Phase findById(Integer id) {

@@ -29,6 +29,8 @@ k8s_resource(workload="redis-master",
 
 print('Deploying docker build')
 
+os.putenv('DOCKER_BUILDKIT', '0')
+
 docker_build('light-controller-ui-image','.',ignore=['.git/', '.idea/', 'light-controller-ui/'])
 
 docker_build('light-controller-frontend','./light-controller-ui',dockerfile='./light-controller-ui/Dockerfile',
