@@ -66,3 +66,25 @@ A tilt setup mimics what a deployment would look like and keeps implementation w
 
 I used OpenApi client generator to get the json from the controllers so i didnt have to manually create every object.
 
+## Addressing each required feature
+
+>Turning on lights at an intersection
+
+The UI has an activate button. When an intersection is modified to be active then the scheduling starts.
+
+> Turning off lights at an intersection
+ 
+Intersection can be updated to be inactive. Stop message gets set to the worker service and the worker service also checks to see if it is still active
+
+>Updating light configuration
+
+Only able to update inactive intersection. Doesnt make sense to modify a currently running light. When the intersection starts back up it will use the new params
+
+>Retrieving light configuration
+
+Selecting an intersection or calling the controller gets all relevant info for that intersection
+
+>Ensuring light synchronization within an intersection
+
+Done via phases object. Only one phase is active at a time. User sets up the lights themselves. 
+I considered having a light conflict detector but on thinking through the use cases u can have so many different kinds of lights that it was out of the scope time wise to do.
