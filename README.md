@@ -7,7 +7,7 @@ This is the code sample by Edward Petruescu
 
 > This sample requires a host with Node.js and Java 17 installed. Tilt and docker. With Tilt it will download a redis and postgres container for deployment
 
-I 
+I like using tilt, it makes things fun. 
 
  ```shell
   ./gradlew build -x test
