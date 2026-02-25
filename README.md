@@ -1,22 +1,13 @@
 # Welcome to the Rygen Java & Vue Work Sample
 
-At Rygen, we care deeply about who joins our team, so congrats on making it to this round in the process!
-
-One of our goals, as we continue the conversation, is to learn more about how you think about and solve technical problems so that we can get a sense of what it will be like working together day-to-day. That's what we're going to focus on here.
-
-**First things first:** This assessment is not intended to take a large portion of your time. We're looking for _quality_ of engineering, not _quantity_ of engineering. The code sample and tasks are open-ended and designed so you can choose what parts of the sample you want to work on.
-
-And, of course, feel free to use any resources you would in your normal day-to-day work experience. You will be expected to be capable of explaining any AI generated code.
-
+This is the code sample by Edward Petruescu
 <hr>
 
 ## Setting Up Your Environment
 
-> This sample requires a host with Node.js and Java 17 installed.
+> This sample requires a host with Node.js and Java 17 installed. Tilt and docker. With Tilt it will download a redis and postgres container for deployment
 
-Run a gradle build and npm install before proceeding to ensure your system or IDE is set up correctly.
-
-- Check that you can run the backend:
+I 
 
  ```shell
   ./gradlew build -x test
@@ -29,23 +20,46 @@ Run a gradle build and npm install before proceeding to ensure your system or ID
   npm install
   npm run build
  ```
+Run tilt in the base folder
 
-Open the [intersection-light-controller.feature](./src/main/features/intersection-light-controller.feature) Gherkin Spec file where the work sample instructions begin.
+ ```shell
+  Tilt up
+ ```
 
-## Reach out if you are stuck
+To teardown
 
-If the instructions in this sample don't work for any reason, or you get hopelessly stuck while coding, don't stress! Send us an email, and we'll help you get unblocked!
+ ```shell
+  tilt down
+ ```
 
-## Commit early, commit often
+## How the app works
+This app is built with the idea that an Intersection has signal groups
+Signal groups are assigned to phases
 
-Git is the core of how we manage code. We would like to see how you organize your code and package it for others to see. _In case of fire `git commit && git push`._
+![img.png](img.png)
 
-## Submitting your work
+A signal group can just be North-south bound light. East-West. 
+But they can also include Turn signal lights, pedestrian lights or any other signals that are required by the intersection.
+An intersection can have n number of lights all on different sequences. Any overlap or how it physically looks is to be handled by the user
 
-To submit your work sample, push your code to a public repository and share the repo link with us. Please include your responses to the following questions.
+There can be emergency and overrides added but i refrained from doing so.
 
-1. How would you evaluate your work? What went well? What would you do differently?
-1. What was an insight you gained or something you learned while working on this?
-1. If you were to add another test challenge to this, what would it be? Why?
+The idea is that street signals are created by trained professionals on the field usually with analog equipment (or analong like).
+This app is just mimicking it with the UI pretty much acting like the controller
 
-**Good luck and happy coding!**
+## How the scheduling works
+
+This app is designed for a multipod system. it would work better with virtual threads but that was only introduced in java 21
+
+When an intersection starts, the thread tries getting the lock for the intersection.
+It then Schedules it to be ran every second instead of dynamically triggering updates as having a thread go through it is safer execution wise
+When a thread starts up the ownership cycle it checks if it has leadership over the intersection, and if the intersection is still active.
+If its all good then it moves forward with actually changing lights and going through the phases.
+During a phase it will change all the lights for the signal groups attached to it
+using a mod operator for sequences in a phase, it determines if it goes to the next phase
+
+## Architecture changes configurations
+I originally wanted to have cascading changes in postgresql  but im honestly more used to a no sql system with manual changes.
+
+As a app, i didnt want to limit the user/trained professional so it was built in that manner.
+A tilt setup mimics what a deployment would look like and keeps implementation wise simple.
