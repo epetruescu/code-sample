@@ -77,17 +77,11 @@ public class LeadershipElectionService {
             log.warn("Attempt to renew leadership for intersection {} but no lock held", intersectionId);
             return false;
         }
-        try {
-            if (!lock.isHeldByCurrentThread()) {
-                log.warn("Leadership for intersection {} is not held by current thread", intersectionId);
-                heldLocks.remove(intersectionId);
-                return false;
-            }
-            return true;
-        } catch (Exception e) {
-            log.error("Error while renewing leadership for intersection {}", intersectionId, e);
+        if (!lock.isLocked()) {
+            log.warn("Lock for intersection {} is no longer held", intersectionId);
             heldLocks.remove(intersectionId);
             return false;
         }
+        return true;
     }
 }

@@ -142,15 +142,20 @@ public class WorkerService {
         log.debug("Check phase for Intersection {}", intersectionId);
         RMap<String, Object> state = redissonClient.getMap(INTERSECTION_STATE_KEY + intersectionId);
         Integer phaseIndex = (Integer) state.getOrDefault(PHASE_INDEX, 0);
-        Instant lastTransitionTime = (Instant) state.getOrDefault(LAST_TRANSITION_TIME, Instant.now());
+        Instant lastTransitionTime = (Instant) state.get(LAST_TRANSITION_TIME);
         Long cycleCount = (Long) state.getOrDefault(CYCLE_COUNT, 0L);
+
+        if (lastTransitionTime == null) {
+            lastTransitionTime = Instant.now();
+            state.put(LAST_TRANSITION_TIME, lastTransitionTime);
+        }
 
         Phase currentPhase = phaseService.findByIntersectionIdAndPhaseSequence(intersectionId, phaseIndex);
         if (currentPhase == null) {
             log.warn("No phase found for intersection {} and phase index {}", intersectionId, phaseIndex);
             return;
         }
-        log.debug("Check phase for phase sequence{}", currentPhase.getSequence());
+        log.debug("Check phase for phase sequence {}", currentPhase.getSequence());
         Instant currentTime = Instant.now();
         long secondsSinceTransition = currentTime.getEpochSecond() - lastTransitionTime.getEpochSecond();
 
@@ -179,10 +184,11 @@ public class WorkerService {
                     currentPhase.getSequence(), intersectionId);
             return;
         }
-        log.debug("Next phase for intersection {}", intersectionId);
 
         int nextIndex = (currentIndex + 1) % sequences.size();
         Integer nextSequence = sequences.get(nextIndex);
+
+        log.debug("Next phase for intersection {} sequence {}, and next {}", intersectionId, currentIndex, nextSequence);
 
         //update intersection by Id with current phase color and next phase color
         state.fastPut(PHASE_INDEX, nextSequence);
@@ -196,6 +202,7 @@ public class WorkerService {
                                    RMap<String, Object> state) {
 
         LightColor stateLightColor = (LightColor) state.get(CURRENT_LIGHT);
+        log.debug("Updating signal for intersection {} to color {}", intersectionId, currentLightColor);
 
         if (stateLightColor == null || stateLightColor != currentLightColor) {
             state.put(CURRENT_LIGHT, currentLightColor);
