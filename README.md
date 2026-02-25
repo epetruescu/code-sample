@@ -63,3 +63,6 @@ I originally wanted to have cascading changes in postgresql  but im honestly mor
 
 As a app, i didnt want to limit the user/trained professional so it was built in that manner.
 A tilt setup mimics what a deployment would look like and keeps implementation wise simple.
+
+I used OpenApi client generator to get the json from the controllers so i didnt have to manually create every object.
+
