@@ -66,6 +66,8 @@ A tilt setup mimics what a deployment would look like and keeps implementation w
 
 I used OpenApi client generator to get the json from the controllers so i didnt have to manually create every object.
 
+Redis also has an auto pilot for leadership where it will renew automatically so i cleaned that up.
+
 ## Addressing each required feature
 
 >Turning on lights at an intersection

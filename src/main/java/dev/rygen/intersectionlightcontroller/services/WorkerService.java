@@ -49,9 +49,6 @@ public class WorkerService {
 
     private static final int MAX_CONSECUTIVE_ERRORS = 5;
 
-    @Value("${intersection.leadership.lease-duration:30}")
-    private long leadershipLeaseDuration;
-
     @Value("${intersection.worker.interval:1}")
     private long workerCycleInterval;
 
